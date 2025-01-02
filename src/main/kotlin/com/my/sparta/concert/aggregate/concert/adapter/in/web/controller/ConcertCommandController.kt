@@ -3,6 +3,10 @@ package com.my.sparta.concert.aggregate.concert.adapter.`in`.web.controller
 import com.my.sparta.concert.aggregate.concert.adapter.`in`.web.`interface`.GetReservableSeatsResponse
 import com.my.sparta.concert.aggregate.concert.adapter.`in`.web.`interface`.ReserveConcertRequest
 import com.my.sparta.concert.aggregate.concert.adapter.`in`.web.`interface`.ReservedTicketResponse
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import lombok.RequiredArgsConstructor
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -17,6 +21,13 @@ class ConcertCommandController(
 
 ) {
 
+    @Operation(summary = "콘서트를 예매한다.", description = "콘서트 예매정보를 반환한다.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Successful Operation"),
+            ApiResponse(responseCode = "500", description = "원하는 userId가 아닙니다."),
+        ]
+    )
     /* 콘서트를 예매한다. */
     @PostMapping
     fun reserveConcert(
@@ -39,14 +50,27 @@ class ConcertCommandController(
             return reservedTicketResponse
 
         } else {
-            throw IllegalArgumentException("원하는 userId가 아닙니다. ")
+            throw IllegalArgumentException("원하는 userId가 아닙니다.")
         }
 
     }
 
 
+    @Operation(summary = "예매가능한 콘서트 좌석을 조회한다.", description = "콘서트 예매정보를 반환한다.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Successful Operation"),
+            ApiResponse(responseCode = "500", description = "해당하는 concert 정보를 찾을수 없습니다."),
+        ]
+    )
     @GetMapping("{concertId}/reserve")
     fun getReservableSeats(
+        @Parameter(
+            name = "concertId",
+            description = "조회할 콘서트 ID",
+            required = true,
+            example = "concertId1"
+        )
         @PathVariable("concertId") concertId: String
     ): GetReservableSeatsResponse {
 

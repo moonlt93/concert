@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import javax.naming.AuthenticationException
 
 
 @RestController
@@ -31,14 +32,15 @@ class ConcertCommandController(
     /* 콘서트를 예매한다. */
     @PostMapping
     fun reserveConcert(
-        @RequestBody reserveConcertRequest: ReserveConcertRequest
+        @RequestBody reserveConcertRequest: ReserveConcertRequest,
+        @RequestHeader(name = "Authorization") authorizationToken: String,
     ): ReservedTicketResponse {
 
         val map = mutableMapOf<String, Int>()
         map.put("H", 3);
         map.put("K", 4);
 
-        if (reserveConcertRequest.userId == "user1") {
+        if (reserveConcertRequest.userId == "user1" && authorizationToken == "admin") {
             val reservedTicketResponse = ReservedTicketResponse(
                 "001-kr-0001",
                 "user1",
@@ -49,6 +51,8 @@ class ConcertCommandController(
 
             return reservedTicketResponse
 
+        } else if (authorizationToken != "admin") {
+            throw AuthenticationException("인증된 사용자가 아닙니다.");
         } else {
             throw IllegalArgumentException("원하는 userId가 아닙니다.")
         }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import lombok.RequiredArgsConstructor
+import org.apache.tomcat.websocket.AuthenticationException
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,14 +32,15 @@ class ConcertCommandController(
     /* 콘서트를 예매한다. */
     @PostMapping
     fun reserveConcert(
-        @RequestBody reserveConcertRequest: ReserveConcertRequest
+        @RequestBody reserveConcertRequest: ReserveConcertRequest,
+        @RequestHeader("Authorization") authorization: String,
     ): ReservedTicketResponse {
 
         val map = mutableMapOf<String, Int>()
         map.put("H", 3);
         map.put("K", 4);
 
-        if (reserveConcertRequest.userId == "user1") {
+        if (reserveConcertRequest.userId == "user1" && authorization.equals("admin")) {
             val reservedTicketResponse = ReservedTicketResponse(
                 "001-kr-0001",
                 "user1",
@@ -49,6 +51,8 @@ class ConcertCommandController(
 
             return reservedTicketResponse
 
+        } else if (!authorization.equals("admin")) {
+            throw AuthenticationException("인증된 사용자가 아닙니다.");
         } else {
             throw IllegalArgumentException("원하는 userId가 아닙니다.")
         }
@@ -71,7 +75,8 @@ class ConcertCommandController(
             required = true,
             example = "concertId1"
         )
-        @PathVariable("concertId") concertId: String
+        @PathVariable("concertId") concertId: String,
+        @RequestHeader("Authorization") authorization: String,
     ): GetReservableSeatsResponse {
 
         val map = mutableMapOf<String, List<Int>>()
@@ -87,6 +92,8 @@ class ConcertCommandController(
 
             return getResponse
 
+        } else if (authorization != "admin") {
+            throw AuthenticationException("인증된 사용자가 아닙니다.")
         } else {
             throw IllegalArgumentException(" 해당하는 concert 정보를 찾을수 없습니다.");
         }

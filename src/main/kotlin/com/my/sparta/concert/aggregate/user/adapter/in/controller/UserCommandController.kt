@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import lombok.RequiredArgsConstructor
+import org.apache.tomcat.websocket.AuthenticationException
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 class UserCommandController {
 
 
-    @Operation(summary = "콘서트를 예매한다.", description = "콘서트 예매정보를 반환한다.")
+    @Operation(summary = "유저 토큰을 발급한다.", description = "유저 토큰을 발급한다.")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Successful Operation"),
@@ -24,7 +25,8 @@ class UserCommandController {
     )
     @GetMapping("/token/{userId}")
     fun getToken(
-        @PathVariable(required = true) userId: String
+        @PathVariable(required = true) userId: String,
+        @RequestHeader("Authorization") authorization: String,
     ): TokenResponse {
 
         if (userId != "userId1") {
@@ -46,11 +48,15 @@ class UserCommandController {
     )
     @GetMapping("/charge/{userId}")
     fun findChargedMoney(
-        @PathVariable userId: String
+        @PathVariable userId: String,
+        @RequestHeader("Authorization") authorization: String,
     ): UserWalletInfoResponse {
 
         if (userId != "abcdef") {
             throw IllegalArgumentException("등록되어있는 유저의 id가 아닙니다.")
+        }
+        if(authorization != "admin") {
+            throw AuthenticationException("인증된 사용자가 아닙니다.")
         }
 
         return UserWalletInfoResponse(
@@ -70,16 +76,21 @@ class UserCommandController {
     @PostMapping("/charge/{userId}")
     fun chargeMoney(
         @PathVariable userId: String,
-        @RequestBody request: ChargeMoneyRequest
+        @RequestBody request: ChargeMoneyRequest,
+        @RequestHeader("Authorization") authorization: String,
     ): UserWalletInfoResponse {
 
-        if (userId != "userId1") {
+        if (userId != "abcdef") {
             throw IllegalArgumentException("등록되어있는 유저의 id가 아닙니다.")
         }
 
+        if(authorization != "admin") {
+            throw AuthenticationException("인증된 사용자가 아닙니다.")
+        }
+
         return UserWalletInfoResponse(
-            "userId1",
-            3000.0
+            "abcdef",
+            request.chargeMoney
         )
     }
 
